@@ -216,7 +216,7 @@ int main(int argc, char **argv) {
         printf("\t-min-count <int>\n");
         printf("\t\tLower limit such that words which occur fewer than <int> times are discarded.\n");
         printf("\t-use-oov <int>\n");
-        printf("\t\tUse OOV vector for low-frequency words (as specified by -min-count: 0 or 1 (default).\n");
+        printf("\t\tUse OOV vector for low-frequency words (as specified by -min-count): 0 or 1 (default).\n");
         printf("\nExample usage:\n");
         printf("./vocab_count -verbose 2 -max-vocab 100000 -min-count 10 < corpus.txt > vocab.txt\n");
         return 0;
