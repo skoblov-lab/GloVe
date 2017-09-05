@@ -185,7 +185,7 @@ int get_counts() {
         printf("%s %lld\n",vocab[i].word,vocab[i].count);
     }
     if (i == max_vocab && max_vocab < j) if (verbose > 0) fprintf(stderr, "Truncating vocabulary at size %lld.\n", max_vocab);
-    fprintf(stderr, "Using vocabulary of size %lld.\n\n", i);
+    fprintf(stderr, "Using vocabulary of size %lld.\n\n", (use_oov ? final_vocab_size + 1 : final_vocab_size));
     if (use_oov)
         printf("%s %lld\n", OOV, oov_count);
     return 0;
