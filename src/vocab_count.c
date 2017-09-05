@@ -170,6 +170,7 @@ int get_counts() {
     qsort(vocab, max_vocab, sizeof(VOCAB), CompareVocabTie); //After (possibly) truncating, sort (possibly again), breaking ties alphabetically
     
     long long oov_count = 0;
+    long long final_vocab_size = 0;
 
     for (i = 0; i < max_vocab; i++) {
         if (vocab[i].count < min_count) { // If a minimum frequency cutoff exists, truncate vocabulary
@@ -180,6 +181,7 @@ int get_counts() {
             oov_count += vocab[i].count;
             continue;
         }
+        final_vocab_size++;
         printf("%s %lld\n",vocab[i].word,vocab[i].count);
     }
     if (i == max_vocab && max_vocab < j) if (verbose > 0) fprintf(stderr, "Truncating vocabulary at size %lld.\n", max_vocab);
@@ -216,7 +218,7 @@ int main(int argc, char **argv) {
         printf("\t-min-count <int>\n");
         printf("\t\tLower limit such that words which occur fewer than <int> times are discarded.\n");
         printf("\t-use-oov <int>\n");
-        printf("\t\tUse OOV vector for low-frequency words (as specified by -min-count): 0 or 1 (default).\n");
+        printf("\t\tUse OOV vector for low-frequency words (as specified by -min-count: 0 or 1 (default).\n");
         printf("\nExample usage:\n");
         printf("./vocab_count -verbose 2 -max-vocab 100000 -min-count 10 < corpus.txt > vocab.txt\n");
         return 0;
