@@ -31,6 +31,7 @@
 #define SEED	1159241
 #define HASHFN  bitwisehash
 
+
 typedef struct vocabulary {
     char *word;
     long long count;
@@ -43,8 +44,10 @@ typedef struct hashrec {
 } HASHREC;
 
 int verbose = 2; // 0, 1, or 2
+int use_oov = 1; // 0 or 1
 long long min_count = 1; // min occurrences for inclusion in vocab
 long long max_vocab = 0; // max_vocab = 0 for no limit
+static const char OOV[] = "__OUT_OF_VOCABULARY__"; // making sure this string doesn't exist in the corpus
 
 
 /* Efficient string comparison */
@@ -136,6 +139,10 @@ int get_counts() {
             fprintf(stderr, "\nError, <unk> vector found in corpus.\nPlease remove <unk>s from your corpus (e.g. cat text8 | sed -e 's/<unk>/<raw_unk>/g' > text8.new)");
             return 1;
         }
+        if (use_oov && strcmp(str, OOV) == 0) {
+            fprintf(stderr, "\nError, the OOV vectors found in corpus");
+            return 1;
+        }
         hashinsert(vocab_hash, str);
         if (((++i)%100000) == 0) if (verbose > 1) fprintf(stderr,"\033[11G%lld tokens.", i);
     }
@@ -162,16 +169,23 @@ int get_counts() {
     else max_vocab = j;
     qsort(vocab, max_vocab, sizeof(VOCAB), CompareVocabTie); //After (possibly) truncating, sort (possibly again), breaking ties alphabetically
     
+    long long oov_count = 0;
+
     for (i = 0; i < max_vocab; i++) {
         if (vocab[i].count < min_count) { // If a minimum frequency cutoff exists, truncate vocabulary
-            if (verbose > 0) fprintf(stderr, "Truncating vocabulary at min count %lld.\n",min_count);
-            break;
+            if (!use_oov) {
+                if (verbose > 0) fprintf(stderr, "Truncating vocabulary at min count %lld.\n", min_count);
+                break;
+            }
+            oov_count += vocab[i].count;
+            continue;
         }
         printf("%s %lld\n",vocab[i].word,vocab[i].count);
     }
-    
     if (i == max_vocab && max_vocab < j) if (verbose > 0) fprintf(stderr, "Truncating vocabulary at size %lld.\n", max_vocab);
     fprintf(stderr, "Using vocabulary of size %lld.\n\n", i);
+    if (use_oov)
+        printf("%s %lld\n", OOV, oov_count);
     return 0;
 }
 
@@ -201,6 +215,8 @@ int main(int argc, char **argv) {
         printf("\t\tUpper bound on vocabulary size, i.e. keep the <int> most frequent words. The minimum frequency words are randomly sampled so as to obtain an even distribution over the alphabet.\n");
         printf("\t-min-count <int>\n");
         printf("\t\tLower limit such that words which occur fewer than <int> times are discarded.\n");
+        printf("\t-use-oov <int>\n");
+        printf("\t\tUse OOV vector for low-frequency words (as specified by -min-count: 0 or 1 (default).\n");
         printf("\nExample usage:\n");
         printf("./vocab_count -verbose 2 -max-vocab 100000 -min-count 10 < corpus.txt > vocab.txt\n");
         return 0;
@@ -209,6 +225,7 @@ int main(int argc, char **argv) {
     if ((i = find_arg((char *)"-verbose", argc, argv)) > 0) verbose = atoi(argv[i + 1]);
     if ((i = find_arg((char *)"-max-vocab", argc, argv)) > 0) max_vocab = atoll(argv[i + 1]);
     if ((i = find_arg((char *)"-min-count", argc, argv)) > 0) min_count = atoll(argv[i + 1]);
+    if ((i = find_arg((char *)"-use-oov", argc, argv)) > 0) use_oov = atoi(argv[i + 1]);
     return get_counts();
 }
 
